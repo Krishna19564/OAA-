@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Assistant Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 500px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .bot .message-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        #messageInput:focus {
+            border-color: #4facfe;
+        }
+
+        #sendBtn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: scale(1.05);
+        }
+
+        .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-btn {
+            padding: 8px 16px;
+            background: #e3f2fd;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #4facfe;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                width: 95%;
+                height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🎓 College Assistant</h1>
+            <p>Your 24/7 college companion</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    <strong>Hi! 👋</strong> I'm your College Assistant. I can help you with:<br>
+                    - Attendance status<br>
+                    - Assignment deadlines<br>
+                    - KTs & exams<br>
+                    - Class timetable<br>
+                    - Canteen menu<br>
+                    - Events & holidays<br>
+                    Just ask me anything! 😊
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-group">
+                <input type="text" id="messageInput" placeholder="Ask about attendance, timetable, canteen..." autocomplete="off">
+                <button id="sendBtn">Send 🚀</button>
+            </div>
+            <div class="quick-buttons">
+                <button class="quick-btn" onclick="quickQuery('attendance')">Attendance</button>
+                <button class="quick-btn" onclick="quickQuery('timetable')">Timetable</button>
+                <button class="quick-btn" onclick="quickQuery('canteen')">Canteen</button>
+                <button class="quick-btn" onclick="quickQuery('exams')">Exams</button>
+                <button class="quick-btn" onclick="quickQuery('assignments')">Assignments</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample College Data (You can connect this to your actual database/API)
+        const collegeData = {
+            attendance: {
+                current: 78.5,
+                required: 75,
+                subjects: {
+                    "Maths": "85%",
+                    "Physics": "72%",
+                    "Chemistry": "91%",
+                    "Programming": "68%"
+                }
+            },
+            timetable: {
+                monday: [
+                    "9:00-10:00: Maths (Room 101)",
+                    "10:15-11:15: Physics (Room 102)",
+                    "11:30-12:30: Programming (Lab 1)"
+                ],
+                today: "Monday"
+            },
+            canteen: {
+                breakfast: ["Poha", "Idli Sambhar", "Bread Butter", "Tea/Coffee"],
+                lunch: ["Dal Rice", "Veg Curry", "Roti", "Salad"],
+                snacks: ["Samosa", "Sandwich", "Chips", "Cold Drinks"],
+                prices: "Breakfast: ₹20-40, Lunch: ₹50-70, Snacks: ₹15-35"
+            },
+            exams: {
+                upcoming: [
+                    "Maths Midterm: 15th Oct, 10 AM",
+                    "Physics Practical: 18th Oct, 2 PM",
+                    "Programming KT: 22nd Oct, 9 AM"
+                ],
+                results: "Results available on portal"
+            },
+            assignments: {
+                pending: [
+                    "Maths Assignment 3: Due 12th Oct",
+                    "Programming Project: Due 20th Oct"
+                ]
+            },
+            holidays: [
+                "Diwali Break: 25th-28th Oct",
+                "Sunday: 13th Oct"
+            ],
+            events: [
+                "Tech Fest: 20th-22nd Oct",
+                "Sports Day: 15th Oct"
+            ]
+        };
+
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getBotResponse(userMessage) {
+            const msg = userMessage.toLowerCase();
+            
+            // Attendance queries
+            if (msg.includes('attendance') || msg.includes('attend')) {
+                const att = collegeData.attendance;
+                let response = `📊 <strong>Your Attendance:</strong><br>`;
+                response += `Overall: <strong>${att.current}%</strong> (Required: ${att.required}%)<br><br>`;
+                response += `<strong>Subject-wise:</strong><br>`;
+                for (let subject in att.subjects) {
+                    response += `• ${subject}: ${att.subjects[subject]}<br>`;
+                }
+                return response;
+            }
+
+            // Timetable queries
+            else if (msg.includes('timetable') || msg.includes('schedule') || msg.includes('class')) {
+                const tt = collegeData.timetable;
+                let response = `📅 <strong>Today's Timetable (${tt.today}):</strong><br>`;
+                tt.monday.forEach(slot => {
+                    response += `• ${slot}<br>`;
+                });
+                response += `<br>Say "full timetable" for complete week schedule!`;
+                return response;
+            }
+
+            // Canteen queries
+            else if (msg.includes('canteen') || msg.includes('mess') || msg.includes('food') || msg.includes('menu')) {
+                const canteen = collegeData.canteen;
+                let response = `🍽️ <strong>Today's Canteen Menu:</strong><br>`;
+                response += `<strong>Breakfast:</strong> ${canteen.breakfast.join(', ')}<br>`;
+                response += `<strong>Lunch:</strong> ${canteen.lunch.join(', ')}<br>`;
+                response += `<strong>Snacks:</strong> ${canteen.snacks.join(', ')}<br><br>`;
+                response += `<em>${canteen.prices}</em>`;
+                return response;
+            }
+
+            // Exams queries
+            else if (msg.includes('exam') || msg.includes('kt') || msg.includes('test')) {
+                const exams = collegeData.exams;
+                let response = `📚 <strong>Upcoming Exams:</strong><br>`;
+                exams.upcoming.forEach(exam => {
+                    response += `• ${exam}<br>`;
+                });
+                response += `<br><em>${exams.results}</em>`;
+                return response;
+            }
+
+            // Assignments queries
+            else if (msg.includes('assignment') || msg.includes('submit') || msg.includes('homework')) {
+                const assignments = collegeData.assignments;
+                let response = `📝 <strong>Pending Assignments:</strong><br>`;
+                if (assignments.pending.length > 0) {
+                    assignments.pending.forEach(assignment => {
+                        response += `• ${assignment}<br>`;
+                    });
+                } else {
+                    response += `✅ All assignments submitted! Great job! 🎉`;
+                }
+                return response;
+            }
+
+            // Holidays & Events
+            else if (msg.includes('holiday') || msg.includes('leave') || msg.includes('event')) {
+                let response = `🎉 <strong>Upcoming Holidays:</strong><br>`;
+                collegeData.holidays.forEach(holiday => {
+                    response += `• ${holiday}<br>`;
+                });
+                response += `<br><strong>College Events:</strong><br>`;
+                collegeData.events.forEach(event => {
+                    response += `• ${event}<br>`;
+                });
+                return response;
+            }
+
+            // Default responses
+            else if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey')) {
+                return "👋 Hello! How can I help you today? Ask me about attendance, timetable, canteen, exams, or assignments!";
+            }
+            else if (msg.includes('thank') || msg.includes('thanks')) {
+                return "😊 You're welcome! Always here to help! 🚀";
+            }
+            else {
+                return `🤔 I can help you with:<br>
+                - Attendance status<br>
+                - Class timetable<br>
+                - Canteen menu<br>
+                - Upcoming exams/KTs<br>
+                - Assignment deadlines<br>
+                - Holidays & events<br>
+                Try asking about any of these!`;
+            }
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+
+            setTimeout(() => {
+                const response = getBotResponse(message);
+                addMessage(response);
+            }, 500);
+        }
+
+        function quickQuery(query) {
+            messageInput.value = query;
+            sendMessage();
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Auto-focus input
+        messageInput.focus();
+    </script>
+</body>
+</html>
